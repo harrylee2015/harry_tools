@@ -7,20 +7,18 @@ import (
 )
 
 func main() {
-    fmt.Println(GetNodeName("192.168.0.175:8802"))
-    str :="1"
-    strs :=strings.SplitN(str,".",2)
-    fmt.Println(strs)
-	str1 :=strings.SplitAfter(str,".")
-	fmt.Println(str1)
-   //p := &People{}
-   //p.SetChild(p)
+
+   p := &People{}
+   fmt.Println("type:",p.Get())
    //fmt.Println("reflect value:",p.DriverBase.childValue)
    //fmt.Println("say:",p.Say())
-   ////d :=DriverBase{}
-   //typ := reflect.TypeOf(p)
-   //fmt.Println("reflect type:",typ)
-   //fmt.Println("reflect method:",ListMethodByType(typ))
+   //d :=DriverBase{}
+   typ := reflect.TypeOf(p)
+   fmt.Println("name:",typ.Name())
+   fmt.Println("reflect type:",typ)
+   fmt.Println("reflect method:",ListMethodByType(typ))
+   tyv := reflect.ValueOf(p)
+   fmt.Println("value:",tyv.Interface().(*People))
 }
 func GetNodeName(node string)string{
 	return strings.Split(node,":")[0]
@@ -47,6 +45,7 @@ type People struct {
 type Driver interface {
 	SetName(name string)
 	Say()string
+	Get()interface{}
 }
 type DriverBase struct {
 	name string
@@ -63,6 +62,16 @@ func (d *DriverBase) SetChild(e Driver) {
 	d.child = e
 	d.childValue = reflect.ValueOf(e)
 }
+func (d *DriverBase)Get()reflect.Type{
+	return reflect.TypeOf(d)
+}
 func (p *People)Say()string{
 	return "people lange"
+}
+func (p *People)SetName(name string){
+	p.name= name
+}
+
+func (p *People)Get()reflect.Type{
+	return reflect.TypeOf(p)
 }

@@ -11,7 +11,8 @@ import (
 	"encoding/csv"
 	//"path/filepath"
 	//"strings"
-	"path/filepath"
+	//"path/filepath"
+	"strings"
 )
 func main() {
 	//files,_:=filepath.Glob("D:\\Repository\\src\\gitlab.33.cn\\lihailei\\chain33_tools\\gmsg-framework\\*.csv")
@@ -29,19 +30,8 @@ func main() {
      //   fmt.Println("num:",num)
 	//
 	//}
-	taskDir :=filepath.Join(filepath.Dir("D:\\Repository\\src\\gitlab.33.cn\\lihailei\\chain33_tools\\gmsg-framework\\"),"datadir")
-	err:=os.RemoveAll(taskDir)
-	if err !=nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println("taskDir:",taskDir)
-	//fmt.Println("name:",cacelStoreFileName("xxxxxxxxx",1))
-	index := &Index{
-		10,
-		10000,
-		20000,
-	}
-	updateIndex("D:\\Repository\\src\\gitlab.33.cn\\lihailei\\chain33_tools\\gmsg-framework\\index",index)
+     str := "123.456.89"
+     fmt.Println("result:",strings.HasPrefix(str,"123"))
 }
 func cacelStoreFileName(taskId string,index int)string{
 	return fmt.Sprintf("%s_%08d.csv",taskId,index)
