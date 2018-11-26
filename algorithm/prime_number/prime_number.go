@@ -14,7 +14,7 @@ func main() {
 	goal = 10000
 	c := make(chan int)
     go primetask(c)
-	for i := 2; i < goal; i++ {
+	for i := 2; ; i++ {
 		c <- i
 	}
 	time.Sleep(5*time.Second)
@@ -24,9 +24,9 @@ func main() {
 //比较占资源
 func primetask(c chan int) {
 	p := <-c
-	if p > goal {
-		return
-	}
+	//if p > goal {
+	//	return
+	//}
 	fmt.Println(p)
 	nc := make(chan int)
 	fmt.Println("count:",atomic.AddInt64(&count,1))
