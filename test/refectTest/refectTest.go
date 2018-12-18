@@ -1,77 +1,46 @@
 package main
 
 import (
-	"reflect"
 	"fmt"
-	"strings"
+	"reflect"
 )
 
+type Person struct {
+	Name string
+	Age  int
+}
+
+func (p Person) GetName() string {
+	return p.Name
+}
+
+func (p Person) SetName(name string) {
+	p.Name = name
+}
+
 func main() {
-
-   p := &People{}
-   fmt.Println("type:",p.Get())
-   //fmt.Println("reflect value:",p.DriverBase.childValue)
-   //fmt.Println("say:",p.Say())
-   //d :=DriverBase{}
-   typ := reflect.TypeOf(p)
-   fmt.Println("name:",typ.Name())
-   fmt.Println("reflect type:",typ)
-   fmt.Println("reflect method:",ListMethodByType(typ))
-   tyv := reflect.ValueOf(p)
-   fmt.Println("value:",tyv.Interface().(*People))
-}
-func GetNodeName(node string)string{
-	return strings.Split(node,":")[0]
-}
-func ListMethodByType(typ reflect.Type) map[string]reflect.Method {
-	methods := make(map[string]reflect.Method)
-	fmt.Println("NumMethod:",typ.NumMethod())
-	for m := 0; m < typ.NumMethod(); m++ {
-		method := typ.Method(m)
-		//mtype := method.Type
-		mname := method.Name
-		fmt.Println("method Name:",mname)
-		// Method must be exported.
-		//if method.PkgPath != ""  {
-		//	continue
-		//}
-		methods[mname] = method
+	p := &Person{"alisa", 10}
+	t := reflect.TypeOf(*p) //must be value
+	fmt.Println("type.Name:", t.Name())
+	v := reflect.ValueOf(p).Elem() // point
+	k := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		key := k.Field(i)
+		val := v.Field(i)
+		fmt.Println("key.Name", key.Name, "val.Type", val.Type(), "val.Interface", val.Interface())
 	}
-	return methods
-}
-type People struct {
-	DriverBase
-}
-type Driver interface {
-	SetName(name string)
-	Say()string
-	Get()interface{}
-}
-type DriverBase struct {
-	name string
-	child  Driver
-	childValue reflect.Value
-}
-func (d *DriverBase) Say()string{
-   return "Hello"
-}
-func (d *DriverBase) SetName(name string) {
-	d.name = name
-}
-func (d *DriverBase) SetChild(e Driver) {
-	d.child = e
-	d.childValue = reflect.ValueOf(e)
-}
-func (d *DriverBase)Get()reflect.Type{
-	return reflect.TypeOf(d)
-}
-func (p *People)Say()string{
-	return "people lange"
-}
-func (p *People)SetName(name string){
-	p.name= name
-}
+	//v2 := reflect.Indirect(reflect.ValueOf(p))
+	//k2 := v2.Type()
+	for i := 0; i < v.NumMethod(); i++ {
+		key := k.Method(i)
+		val := v.Method(i)
+		fmt.Println(key.Name, val.Type(), val.Interface())
+	}
 
-func (p *People)Get()reflect.Type{
-	return reflect.TypeOf(p)
+	v.FieldByName("Name").Set(reflect.ValueOf("Name"))
+	fmt.Println(p.Name)
+
+	name := v.MethodByName("GetName").Call([]reflect.Value{})
+	fmt.Println(name)
+
 }
