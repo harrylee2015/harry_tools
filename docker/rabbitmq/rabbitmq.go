@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/streadway/amqp"
 	"log"
+	"math/rand"
+	"strconv"
 )
 
 //url 格式 amqp://帐号:密码@rabbitmq服务器地址：端口/vhost
@@ -249,9 +251,8 @@ func (r *RabbitMQ) ReceivSub() {
 	<-forever
 }
 
-
 //路由模式
-func NewRabbitMQRouting(exchangeName,routingKey string) *RabbitMQ {
+func NewRabbitMQRouting(exchangeName, routingKey string) *RabbitMQ {
 	rabbitmq := NewRabbitMQ("", exchangeName, routingKey)
 	return rabbitmq
 }
@@ -362,7 +363,7 @@ func (r *RabbitMQ) ReceiveRouting() {
 }
 
 //话题模式
-func NewRabbitMQTopic(exchangeName,routingKey string) *RabbitMQ {
+func NewRabbitMQTopic(exchangeName, routingKey string) *RabbitMQ {
 	rabbitmq := NewRabbitMQ("", exchangeName, routingKey)
 	return rabbitmq
 }
@@ -475,4 +476,138 @@ func (r *RabbitMQ) ReceiveTopic() {
 	}()
 	log.Printf("[*] waiting for messages, to exit press ctrl + c")
 	<-forever
+}
+
+//Rpc模式,交换机采用direct类型，指定路由
+func NewRabbitMQPRC(queueName string) *RabbitMQ {
+	rabbitmq := NewRabbitMQ(queueName, "","")
+	return rabbitmq
+}
+func (r *RabbitMQ) ClientRPC(message string) {
+	//尝试创建queue
+	q, err := r.channel.QueueDeclare(
+		"",
+		//是否持久化
+		false,
+		false,
+		//true表示这个exchange不可以被client用来推送消息，仅用来进行exchange和exchange之间得绑定
+		true,
+		false,
+		nil,
+	)
+	if err != nil {
+		r.failOnErr(err, "declare queue failed")
+	}
+	msgs, err := r.channel.Consume(
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	r.failOnErr(err, "failed to register a consumer")
+	corrId := randomString(32)
+	//2.发送消息到队列中
+	err = r.channel.Publish(
+		"",
+		r.QueueName,
+		//如果为true，根据exchange类型和routekey 规则，如果无法找到符合条件得队列，则会把发送得消息返回给发送者
+		false,
+		//如果为true，当exchange发送消息到队列后发现队列上没有绑定消费者，则会把发送得消息返还给发送者
+		false,
+		amqp.Publishing{
+			ContentType:   "text/plain",
+			CorrelationId: corrId,
+			ReplyTo:       q.Name,
+			Body:          []byte(message),
+		})
+	r.failOnErr(err, "failed to publish a message")
+
+	for d := range msgs {
+		if corrId == d.CorrelationId {
+			res, err := strconv.Atoi(string(d.Body))
+			r.failOnErr(err, "failed to convert body to integer")
+			fmt.Println("respon:", res)
+			break
+		}
+	}
+
+}
+
+func randInt(min, max int) int {
+	return min + rand.Intn(max-min)
+}
+func randomString(i int) string {
+	bytes := make([]byte, i)
+	for i := 0; i < i; i++ {
+		bytes[i] = byte(randInt(65, 90))
+	}
+	return string(bytes)
+}
+func (r *RabbitMQ) ServerPRC() {
+	//1.尝试创建queue
+	q, err := r.channel.QueueDeclare(
+		r.QueueName,
+		//是否持久化
+		false,
+		false,
+		//true表示这个exchange不可以被client用来推送消息，仅用来进行exchange和exchange之间得绑定
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		r.failOnErr(err, "declare queue failed server")
+	}
+	//预取数，大小，
+	err = r.channel.Qos(1, 0, false)
+	r.failOnErr(err, "failed to set Qos")
+	msgs, err := r.channel.Consume(
+		q.Name,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	r.failOnErr(err, "failed to register a consumer")
+
+	forever := make(chan bool)
+	go func() {
+		for d := range msgs {
+			//TODO 处理函数
+			n, err := strconv.Atoi(string(d.Body))
+			log.Printf("Received amessage: %d", n)
+			r.failOnErr(err, "failed to convert body to integer")
+			reponse := fib(n)
+			fmt.Println(reponse)
+			err = r.channel.Publish(
+				"",
+				d.ReplyTo,
+				false,
+				false,
+				amqp.Publishing{
+					ContentType:   "text/plain",
+					CorrelationId: d.CorrelationId,
+					Body:          []byte(strconv.Itoa(reponse)),
+				})
+			r.failOnErr(err, "failed to publish a message")
+			d.Ack(false)
+		}
+	}()
+	log.Printf("[*] waiting for messages, to exit press ctrl + c")
+	<-forever
+}
+
+func fib(n int) int {
+	if n == 0 {
+		return 0
+	} else if n == 1 {
+		return 1
+	} else {
+		return fib(n-1) + fib(n-2)
+	}
 }

@@ -68,3 +68,17 @@ func TestNewRabbitMQTopic(t *testing.T) {
 	}
 	time.Sleep(5 * time.Second)
 }
+
+func TestNewRabbitMQPRC(t *testing.T) {
+
+	go func() {
+		rabbitmq := NewRabbitMQPRC("rpc")
+		rabbitmq.ServerPRC()
+	}()
+	time.Sleep(time.Second)
+	for i := 0; i <= 10; i++ {
+		rabbitmq := NewRabbitMQPRC("rpc")
+		rabbitmq.ClientRPC(strconv.Itoa(i))
+	}
+	time.Sleep(5 * time.Second)
+}
