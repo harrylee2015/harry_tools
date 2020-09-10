@@ -1,6 +1,7 @@
 package base
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
 	"unicode/utf8"
@@ -49,3 +50,11 @@ func TestBytes(t *testing.T){
 
 }
 
+func BenchmarkStr(b *testing.B){
+    b.ResetTimer()
+	var buffer bytes.Buffer
+	for i := 0; i < b.N; i++ {
+		buffer.WriteString("a")
+	}
+	//b.Log(buffer.String())
+}
