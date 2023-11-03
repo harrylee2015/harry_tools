@@ -12,5 +12,6 @@ require (
 	github.com/shirou/gopsutil v2.19.11+incompatible
 	github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4 // indirect
 	github.com/streadway/amqp v1.0.0
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.8.1
+	go.etcd.io/etcd/client/v3 v3.5.9
 )
