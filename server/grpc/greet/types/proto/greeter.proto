@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package types;
+
+option go_package = "github.com/harry2015/harry_toos/server/grpc/greet/types";
+
+service Greeter {
+  rpc Greeter (GreeterRequest) returns (GreeterResponse) {}
+
+  rpc GetGreet (GreeterRequest) returns (GreeterResponse) {}
+}
+
+message GreeterRequest {
+  string name = 1;
+
+  string msg = 2;
+}
+
+message GreeterResponse {
+  string message = 1;
+}

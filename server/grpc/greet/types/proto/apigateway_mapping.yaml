@@ -1,0 +1,15 @@
+type: google.api.Service
+config_version: 3
+
+# Please refer google.api.Http in https://github.com/googleapis/googleapis/blob/master/google/api/http.proto file for details.
+http:
+  rules:
+    - selector: types.Greeter.Greeter
+      get: /api/v1/greeter/{name}
+
+    - selector: types.Greeter.GetGreet
+      post: /api/v1/greeter/{name}
+      body: "*"
+      
+
+    
